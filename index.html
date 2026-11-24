@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="page_title">Cinemundo - Ingressos, Sessões e Bombonière</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <button type="button" class="logo logo-btn" aria-label="Cinemundo" onclick="navegarPagina('cartaz')">
+      <span class="icone-logo" aria-hidden="true">🌐</span> CINE<span>MUNDO</span>
+    </button>
+
+    <nav class="nav-links" aria-label="Navegação principal">
+      <button type="button" id="nav-btn-cartaz" class="nav-tab-btn ativo" data-i18n="nav_cartaz" onclick="navegarPagina('cartaz')">Em Cartaz</button>
+      <button type="button" id="nav-btn-bomboniere" class="nav-tab-btn" data-i18n="nav_bomboniere" onclick="navegarPagina('bomboniere')">Bombonière</button>
+      <button type="button" id="nav-btn-clube" class="nav-tab-btn" data-i18n="nav_clube" onclick="navegarPagina('clube')">Clube Cinemundo</button>
+    </nav>
+
+    <div class="acoes-nav">
+      <button id="btn-abrir-config" type="button" class="btn-icone" data-i18n-title="cfg_titulo" title="Configurações" onclick="abrirModalConfig()">⚙️</button>
+      <div id="area-usuario">
+        <button id="btn-abrir-auth" type="button" class="btn-secundario" data-i18n="nav_entrar" onclick="abrirModalAuth()">Entrar / Cadastrar</button>
+      </div>
+      <button id="btn-carrinho" type="button" class="btn-destaque" onclick="focarResumoPedido()">
+        <span data-i18n="nav_carrinho">Carrinho</span> (<span id="contador-carrinho">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <!-- PÁGINA 1: EM CARTAZ -->
+  <div id="pagina-cartaz" class="pagina-view">
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="hero-conteudo">
+        <span class="tag-estreia" data-i18n="hero_tag">EXCLUSIVO SALAS MUNDO XD</span>
+        <h1 id="hero-titulo" data-i18n="hero_titulo">Duna: Parte Dois</h1>
+        <p id="hero-desc" data-i18n="hero_desc">Viva a experiência definitiva com som imersivo e tela gigante no Cinemundo.</p>
+        <div class="hero-acoes">
+          <button type="button" class="btn-destaque" data-i18n="hero_btn" onclick="selecionarFilme(heroFilmeId)">Garantir Ingresso</button>
+          <button type="button" class="btn-secundario" data-i18n="btn_detalhes_trailer" onclick="abrirModalFilme(heroFilmeId)">Detalhes e Trailer</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="container">
+      <section id="filmes" class="secao-bloco" aria-labelledby="sec-filmes-titulo">
+        <div class="cabecalho-secao-filtros">
+          <div>
+            <h2 id="sec-filmes-titulo" data-i18n="sec_filmes">Programação em Cartaz</h2>
+            <p class="subtitulo-secao" data-i18n="sub_filmes">Filtre por formato de sala ou gênero e escolha sua sessão.</p>
+          </div>
+          <div class="barra-filtros">
+            <div class="filtro-item">
+              <label for="filtro-formato" data-i18n="filtro_formato_lbl">Formato:</label>
+              <select id="filtro-formato" onchange="aplicarFiltrosFilmes()">
+                <option value="todos" data-i18n="filtro_todos">Todos</option>
+                <option value="Padrão 2D">Padrão 2D</option>
+                <option value="Mundo XD">Mundo XD</option>
+                <option value="Sala VIP">Sala VIP</option>
+              </select>
+            </div>
+            <div class="filtro-item">
+              <label for="filtro-genero" data-i18n="filtro_genero_lbl">Gênero:</label>
+              <select id="filtro-genero" onchange="aplicarFiltrosFilmes()">
+                <option value="todos" data-i18n="filtro_todos">Todos</option>
+                <option value="Ficção Científica" data-i18n="gen_scifi">Ficção Científica</option>
+                <option value="Suspense / Histórico" data-i18n="gen_suspense">Suspense / Histórico</option>
+              </select>
+            </div>
+            <button type="button" id="btn-limpar-filtros" class="btn-secundario oculto" onclick="limparFiltrosFilmes()" data-i18n="btn_limpar_filtros">Limpar Filtros</button>
+          </div>
+        </div>
+        <div id="lista-filmes" class="grid-filmes"></div>
+      </section>
+
+      <section id="secao-assentos" class="secao-bloco painel-sessao-ativa oculto" aria-labelledby="assentos-titulo-h2">
+        <div class="cabecalho-sala">
+          <div>
+            <span class="tag-etapa" data-i18n="etapa_sessao">ETAPA DA SESSÃO</span>
+            <h2 id="assentos-titulo-h2" style="margin-top: 0.35rem;">
+              <span data-i18n="assentos_titulo">Escolha seus Assentos</span> — <span id="filme-selecionado-titulo"></span>
+            </h2>
+          </div>
+          <span class="badge-sala" id="badge-sala-texto">Sala 04 • Mundo XD</span>
+        </div>
+
+        <div class="controles-sessao">
+          <div class="grupo-sessao">
+            <span class="rotulo-sessao" data-i18n="label_horarios">Horários da Sessão:</span>
+            <div id="lista-horarios" class="botoes-horarios"></div>
+          </div>
+
+          <div class="grupo-sessao">
+            <label for="select-tipo-ingresso" class="rotulo-sessao" data-i18n="label_tipo_ingresso">Tipo de Ingresso Padrão:</label>
+            <select id="select-tipo-ingresso" class="select-ingresso" onchange="alterarTipoIngresso(this.value)">
+              <option value="inteira" data-i18n="opt_ingresso_inteira">Inteira (100%)</option>
+              <option value="meia" data-i18n="opt_ingresso_meia">Meia-Entrada (50% de desconto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="painel-tipos-assento" class="painel-tipos-assento oculto">
+          <span class="rotulo-sessao" data-i18n="label_assentos_individuais">Tipo por poltrona selecionada:</span>
+          <div id="lista-assentos-individuais" class="lista-assentos-individuais"></div>
+        </div>
+
+        <div class="tela-cinema" data-i18n="tela_cinema">TELA CINEMUNDO</div>
+        <div id="mapa-assentos" class="grid-assentos" role="group" aria-label="Mapa de assentos"></div>
+        <div class="legenda">
+          <span><i class="assento livre" aria-hidden="true"></i> <span data-i18n="leg_livre">Livre</span></span>
+          <span><i class="assento selecionado" aria-hidden="true"></i> <span data-i18n="leg_selecionado">Selecionado</span></span>
+          <span><i class="assento ocupado" aria-hidden="true"></i> <span data-i18n="leg_ocupado">Ocupado</span></span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- PÁGINA 2: BOMBONIÈRE -->
+  <div id="pagina-bomboniere" class="pagina-view oculto">
+    <main class="container pagina-interna">
+      <div class="cabecalho-pagina">
+        <div>
+          <span class="tag-estreia" data-i18n="tag_bomboniere">SNACKS & COMBOS</span>
+          <h1 style="margin-top: 0.45rem;" data-i18n="sec_bomboniere">Bombonière Cinemundo</h1>
+          <p class="subtitulo-secao" data-i18n="sub_bomboniere">Combos, pipoca e snacks com desconto automático para assinantes do Clube.</p>
+        </div>
+        <button type="button" class="btn-secundario" data-i18n="btn_voltar_cartaz" onclick="navegarPagina('cartaz')">Voltar para Em Cartaz</button>
+      </div>
+
+      <div id="lista-snacks" class="grid-snacks"></div>
+    </main>
+  </div>
+
+  <!-- PÁGINA 3: CLUBE CINEMUNDO -->
+  <div id="pagina-clube" class="pagina-view oculto">
+    <main class="container pagina-interna">
+      <section id="clube" class="secao-clube" aria-labelledby="clube-hero-titulo">
+        <div class="cabecalho-clube">
+          <div>
+            <span class="tag-estreia" data-i18n="clube_tag">PROGRAMA DE FIDELIDADE</span>
+            <h1 id="clube-hero-titulo" style="margin-top: 0.6rem;" data-i18n="clube_hero_titulo">Clube Cinemundo</h1>
+          </div>
+          <p class="clube-subtitulo" data-i18n="clube_hero_desc">
+            Ingressos todos os meses, descontos exclusivos na bombonière e pré-venda antecipada nas salas Mundo XD.
+          </p>
+        </div>
+
+        <div id="painel-assinante" class="card-assinante oculto">
+          <div>
+            <span class="tag-estreia" data-i18n="clube_status_ativo">ASSINATURA ATIVA</span>
+            <h3 id="assinante-plano-titulo" style="margin: 0.6rem 0 0.3rem;"></h3>
+            <p id="assinante-detalhes" class="assinante-meta"></p>
+          </div>
+          <div class="acoes-assinante">
+            <button type="button" class="btn-destaque" data-i18n="clube_usar_beneficios" onclick="navegarPagina('bomboniere')">Usar Benefícios</button>
+            <button type="button" class="btn-secundario" onclick="cancelarAssinaturaClube()" data-i18n="clube_cancelar">Cancelar Assinatura</button>
+          </div>
+        </div>
+
+        <div class="grid-planos">
+          <div class="card plano-card" data-plano="Silver" onclick="selecionarPlanoClube('Silver', 29.90, 10)">
+            <div>
+              <span class="badge-plano">SILVER</span>
+              <h3>Clube Silver</h3>
+              <p class="preco-plano">R$ 29,90 <small data-i18n="por_mes">/mês</small></p>
+              <ul class="lista-beneficios">
+                <li data-i18n="ben_silver_1">1 ingresso 2D por mês</li>
+                <li data-i18n="ben_silver_2">10% de desconto na Bombonière</li>
+                <li data-i18n="ben_silver_3">Sem taxa de conveniência online</li>
+              </ul>
+            </div>
+            <button type="button" class="btn-secundario btn-selecionar-plano" data-i18n="btn_selecionar_plano">Selecionar Plano</button>
+          </div>
+
+          <div class="card plano-card ativo" data-plano="Gold" onclick="selecionarPlanoClube('Gold', 49.90, 20)">
+            <div>
+              <span class="badge-plano badge-gold" data-i18n="mais_popular">MAIS POPULAR • GOLD</span>
+              <h3>Clube Gold</h3>
+              <p class="preco-plano">R$ 49,90 <small data-i18n="por_mes">/mês</small></p>
+              <ul class="lista-beneficios">
+                <li data-i18n="ben_gold_1">2 ingressos (2D ou Mundo XD) por mês</li>
+                <li data-i18n="ben_gold_2">20% de desconto na Bombonière</li>
+                <li data-i18n="ben_gold_3">Acesso antecipado a pré-vendas</li>
+              </ul>
+            </div>
+            <button type="button" class="btn-destaque btn-selecionar-plano" data-i18n="btn_plano_selecionado">Plano Selecionado</button>
+          </div>
+
+          <div class="card plano-card" data-plano="Black VIP" onclick="selecionarPlanoClube('Black VIP', 89.90, 30)">
+            <div>
+              <span class="badge-plano">BLACK VIP</span>
+              <h3>Clube Black VIP</h3>
+              <p class="preco-plano">R$ 89,90 <small data-i18n="por_mes">/mês</small></p>
+              <ul class="lista-beneficios">
+                <li data-i18n="ben_vip_1">4 ingressos (incluindo Sala VIP) por mês</li>
+                <li data-i18n="ben_vip_2">30% de desconto na Bombonière</li>
+                <li data-i18n="ben_vip_3">1 Combo Individual grátis no aniversário</li>
+              </ul>
+            </div>
+            <button type="button" class="btn-secundario btn-selecionar-plano" data-i18n="btn_selecionar_plano">Selecionar Plano</button>
+          </div>
+        </div>
+
+        <form id="form-clube" class="form-clube-box">
+          <h3 class="titulo-bloco-clube" data-i18n="clube_dados_titulo">Preencha seus Dados de Assinatura</h3>
+          <div class="grid-form-clube">
+            <div class="campo-config">
+              <label for="clube-nome" data-i18n="lbl_nome_completo">Nome Completo *</label>
+              <input type="text" id="clube-nome" required>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-cpf" data-i18n="lbl_cpf">CPF *</label>
+              <input type="text" id="clube-cpf" placeholder="000.000.000-00" maxlength="14" required>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-nascimento" data-i18n="lbl_nascimento">Data de Nascimento *</label>
+              <input type="date" id="clube-nascimento" required>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-telefone" data-i18n="lbl_telefone">Telefone / WhatsApp *</label>
+              <input type="tel" id="clube-telefone" placeholder="(11) 99999-9999" required>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-email" data-i18n="lbl_email">E-mail *</label>
+              <input type="email" id="clube-email" required>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-unidade" data-i18n="lbl_unidade">Cinema Cinemundo Favorito *</label>
+              <select id="clube-unidade" required>
+                <option value="Cinemundo Shopping Central">Cinemundo Shopping Central</option>
+                <option value="Cinemundo Park Plaza">Cinemundo Park Plaza</option>
+                <option value="Cinemundo Boulevard">Cinemundo Boulevard</option>
+              </select>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-pagamento" data-i18n="lbl_pagamento">Forma de Pagamento *</label>
+              <select id="clube-pagamento" required>
+                <option value="Cartão de Crédito" data-i18n="pag_credito">Cartão de Crédito (Recorrente)</option>
+                <option value="PIX Automático" data-i18n="pag_pix">PIX Automático</option>
+              </select>
+            </div>
+
+            <div class="campo-config">
+              <label for="clube-cartao" data-i18n="lbl_num_cartao">Número do Cartão ou Chave PIX *</label>
+              <input type="text" id="clube-cartao" placeholder="**** **** **** 1234" required>
+            </div>
+          </div>
+
+          <div class="campo-check campo-termos-clube">
+            <input type="checkbox" id="clube-termos" required>
+            <label for="clube-termos" data-i18n="clube_aceite_termos">Li e concordo com o regulamento do Clube Cinemundo e a cobrança mensal.</label>
+          </div>
+
+          <div class="rodape-form-clube">
+            <div>
+              <span data-i18n="plano_escolhido_resumo">Plano escolhido:</span>
+              <strong id="resumo-plano-nome">Clube Gold</strong> —
+              <strong id="resumo-plano-valor" class="destaque-dourado">R$ 49,90/mês</strong>
+            </div>
+            <button type="submit" class="btn-destaque" data-i18n="btn_confirmar_assinatura">Confirmar Assinatura</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- Barra de Resumo Fixa -->
+  <aside id="painel-resumo" class="resumo" aria-label="Resumo do pedido">
+    <div class="resumo-conteudo">
+      <div class="resumo-topo-mobile">
+        <strong data-i18n="resumo_titulo">Seu Pedido Cinemundo:</strong>
+        <button type="button" id="btn-toggle-resumo" class="btn-toggle-resumo" onclick="alternarDetalhesResumo()" aria-expanded="false" data-i18n="btn_detalhes_resumo">Detalhes</button>
+      </div>
+      <div id="grupos-resumo" class="grupos-resumo">
+        <div id="grupo-resumo-ingressos" class="grupo-resumo-bloco oculto"></div>
+        <div id="grupo-resumo-snacks" class="grupo-resumo-bloco oculto"></div>
+        <p id="resumo-vazio-msg" class="resumo-vazio-msg" data-i18n="resumo_vazio">Nenhum item selecionado ainda.</p>
+      </div>
+    </div>
+    <div class="acoes-resumo">
+      <div class="total">
+        <span data-i18n="resumo_total">Total</span>: <strong id="valor-total">R$ 0,00</strong>
+      </div>
+      <button id="btn-finalizar" type="button" class="btn-destaque" data-i18n="btn_finalizar">Finalizar Compra</button>
+    </div>
+  </aside>
+
+  <!-- Modal de Login e Cadastro -->
+  <div id="modal-auth" class="modal-overlay oculto" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button id="btn-fechar-auth" type="button" class="btn-fechar" aria-label="Fechar">&times;</button>
+
+      <div class="tabs-auth">
+        <button id="tab-login" type="button" class="tab-btn ativo" data-i18n="tab_login" onclick="alternarAbaAuth('login')">Entrar</button>
+        <button id="tab-cadastro" type="button" class="tab-btn" data-i18n="tab_cadastro" onclick="alternarAbaAuth('cadastro')">Criar Conta</button>
+      </div>
+
+      <p id="aviso-auth" class="aviso-auth oculto"></p>
+
+      <form id="form-login" class="form-auth">
+        <h3 data-i18n="login_titulo">Acesse sua conta Cinemundo</h3>
+        <input type="email" id="login-email" data-i18n-placeholder="ph_email" placeholder="Seu e-mail" required>
+        <input type="password" id="login-senha" data-i18n-placeholder="ph_senha" placeholder="Sua senha" required>
+        <button type="submit" class="btn-destaque" data-i18n="btn_entrar">Entrar</button>
+      </form>
+
+      <form id="form-cadastro" class="form-auth oculto">
+        <h3 data-i18n="cad_titulo">Cadastre-se no Cinemundo</h3>
+        <input type="text" id="cad-nome" data-i18n-placeholder="ph_nome" placeholder="Nome completo" required>
+        <input type="email" id="cad-email" data-i18n-placeholder="ph_email" placeholder="E-mail" required>
+        <input type="password" id="cad-senha" data-i18n-placeholder="ph_cad_senha" placeholder="Crie uma senha (mín. 4 caracteres)" minlength="4" required>
+        <button type="submit" class="btn-destaque" data-i18n="btn_cadastrar">Cadastrar e Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Configurações -->
+  <div id="modal-config" class="modal-overlay oculto" role="dialog" aria-modal="true">
+    <div class="modal-box modal-config-box">
+      <button type="button" class="btn-fechar" aria-label="Fechar" onclick="fecharModalConfig()">&times;</button>
+      <h3 data-i18n="cfg_titulo">Configurações do Cinemundo</h3>
+
+      <form id="form-config" class="form-auth">
+        <div class="campo-config">
+          <label for="cfg-tema" data-i18n="cfg_tema">Tema da Interface</label>
+          <select id="cfg-tema">
+            <option value="escuro" data-i18n="opt_tema_escuro">Escuro (Padrão Cinema)</option>
+            <option value="claro" data-i18n="opt_tema_claro">Claro (Diurno)</option>
+          </select>
+        </div>
+
+        <div class="campo-config">
+          <label for="cfg-idioma" data-i18n="cfg_idioma">Idioma / Language</label>
+          <select id="cfg-idioma">
+            <option value="pt">Português (Brasil)</option>
+            <option value="en">English (US)</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <div class="campo-config">
+          <label for="cfg-ingresso" data-i18n="cfg_ingresso">Ingresso Padrão</label>
+          <select id="cfg-ingresso">
+            <option value="inteira" data-i18n="opt_ingresso_inteira">Inteira (100%)</option>
+            <option value="meia" data-i18n="opt_ingresso_meia">Meia-Entrada (50% de desconto)</option>
+          </select>
+        </div>
+
+        <div class="campo-config">
+          <label for="cfg-sala" data-i18n="cfg_sala">Sala Preferida</label>
+          <select id="cfg-sala">
+            <option value="Mundo XD" data-i18n="opt_sala_xd">Mundo XD (Tela Gigante)</option>
+            <option value="Padrão 2D" data-i18n="opt_sala_2d">Padrão 2D</option>
+            <option value="Sala VIP" data-i18n="opt_sala_vip">Sala VIP Poltrona Reclinável</option>
+          </select>
+        </div>
+
+        <div class="campo-check">
+          <input type="checkbox" id="cfg-fonte-grande">
+          <label for="cfg-fonte-grande" data-i18n="cfg_fonte">Texto ampliado (Acessibilidade)</label>
+        </div>
+
+        <div class="campo-check">
+          <input type="checkbox" id="cfg-notificacoes" checked>
+          <label for="cfg-notificacoes" data-i18n="cfg_notif">Receber alertas de pré-venda e combos</label>
+        </div>
+
+        <div class="acoes-config">
+          <button type="button" class="btn-secundario" data-i18n="cfg_restaurar" onclick="resetarConfiguracoes()">Restaurar Padrão</button>
+          <button type="submit" class="btn-destaque" data-i18n="cfg_salvar">Salvar Preferências</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Checkout e Ingresso Digital -->
+  <div id="modal-checkout" class="modal-overlay oculto" role="dialog" aria-modal="true">
+    <div class="modal-box modal-checkout-box">
+      <button type="button" class="btn-fechar" aria-label="Fechar" onclick="fecharModalCheckout()">&times;</button>
+
+      <div id="checkout-etapa-pagamento">
+        <h3 data-i18n="chk_titulo">Finalizar Pedido Cinemundo</h3>
+        <ul id="checkout-lista-itens" class="checkout-lista"></ul>
+
+        <div class="checkout-total-linha">
+          <span data-i18n="resumo_total">Total</span>:
+          <strong id="checkout-valor-total">R$ 0,00</strong>
+        </div>
+
+        <form id="form-checkout" class="form-auth">
+          <div class="campo-config">
+            <label for="chk-metodo" data-i18n="chk_metodo">Forma de Pagamento</label>
+            <select id="chk-metodo" onchange="alternarCamposPagamento()">
+              <option value="pix" data-i18n="pag_pix_rapido">PIX Instantâneo</option>
+              <option value="cartao" data-i18n="pag_credito">Cartão de Crédito</option>
+            </select>
+          </div>
+
+          <div id="campo-cartao-checkout" class="campo-config oculto">
+            <label for="chk-cartao" data-i18n="chk_cartao">Número do Cartão</label>
+            <input type="text" id="chk-cartao" placeholder="0000 0000 0000 0000">
+          </div>
+
+          <button type="submit" class="btn-destaque" data-i18n="chk_confirmar">Confirmar Pagamento e Gerar Ingresso</button>
+        </form>
+      </div>
+
+      <div id="checkout-etapa-voucher" class="oculto voucher-box">
+        <span class="tag-estreia" data-i18n="voucher_tag">INGRESSO DIGITAL CINEMUNDO</span>
+        <h3 id="voucher-codigo" style="margin-top: 0.6rem;"></h3>
+        <p id="voucher-cliente" class="voucher-sub"></p>
+        <div id="voucher-detalhes" class="voucher-detalhes"></div>
+        <canvas id="canvas-qrcode" width="150" height="150" class="qrcode-canvas"></canvas>
+        <div class="acoes-voucher">
+          <button type="button" id="btn-ir-bomboniere-voucher" class="btn-secundario oculto" onclick="irParaBomboniereAposIngresso()" data-i18n="btn_pedir_combo">Pedir Combo na Bombonière</button>
+          <button type="button" class="btn-destaque" onclick="fecharModalCheckout()" data-i18n="voucher_fechar">Concluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Meus Ingressos / Histórico -->
+  <div id="modal-meus-ingressos" class="modal-overlay oculto" role="dialog" aria-modal="true">
+    <div class="modal-box modal-historico-box">
+      <button type="button" class="btn-fechar" aria-label="Fechar" onclick="fecharModalMeusIngressos()">&times;</button>
+      <h3 data-i18n="meus_ingressos_titulo">Meus Ingressos e Histórico</h3>
+      <p id="resumo-cota-clube" class="voucher-sub" style="margin-top: 0.35rem;"></p>
+      <div id="lista-historico-pedidos" class="lista-historico"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes e Trailer do Filme -->
+  <div id="modal-filme" class="modal-overlay oculto" role="dialog" aria-modal="true">
+    <div class="modal-box modal-filme-box">
+      <button type="button" class="btn-fechar" aria-label="Fechar" onclick="fecharModalFilme()">&times;</button>
+      <div id="detalhe-filme-conteudo"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
